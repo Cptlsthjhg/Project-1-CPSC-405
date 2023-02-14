@@ -87,6 +87,8 @@ found:
   p->state = EMBRYO;
   p->pid = nextpid++;
 
+  p->tickets = 10;
+
   p->context = (struct context*)malloc(sizeof(struct context));
   memset(p->context, 0, sizeof *p->context);
   p->context->pc = (uint)forkret;
@@ -329,7 +331,7 @@ procdump(void)
 
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
     if(p->pid > 0)
-      printf("pid: %d, parent: %d state: %s\n", p->pid, p->parent == 0 ? 0 : p->parent->pid, procstatep[p->state]);
+      printf("pid: %d, parent: %d state: %s tickets: %d\n", p->pid, p->parent == 0 ? 0 : p->parent->pid, procstatep[p->state], p->tickets);
 }
 
 
