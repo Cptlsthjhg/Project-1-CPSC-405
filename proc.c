@@ -108,6 +108,10 @@ userinit(void)
   strcpy(p->cwd, "/");
   strcpy(p->name, "userinit"); 
   p->state = RUNNING;
+
+  //We're going to assign the firs user process some tickets too:
+  p->tickets = 10;
+
   curr_proc = p;
   return p->pid;
 }
