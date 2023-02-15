@@ -328,19 +328,44 @@ scheduler(void)
     curr_proc->state = RUNNABLE;
 
     struct proc *p;
+    int rint=0;
+    int runningTotal=0;
 
+    //We need to grab the total number of tickets in order to set rand bounds.
+    int m = getMax();
+    rint=rand() % m;
+    //now we have our rand and can grab the proper proc paired to the rand result.
     acquire(&ptable.lock);
+
+    //DEBUG LINE
+    printf("The random number selected is: %d \n",rint);
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-        if(p == curr_proc || p->state != RUNNABLE)
-            continue;
+        runningTotal+= p->tickets;
+        if(rint<=runningTotal){
+        goto procswitch;
+        }
+    }
 
         // Switch to chosen process.
+    procswitch:
         curr_proc = p;
         p->state = RUNNING;
-        break;
-    }
+    
     release(&ptable.lock);
 
+}
+
+
+int getMax(){
+
+    struct proc *p;
+    int max=0;
+
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    max+= p->tickets;
+    }
+
+    return max;
 }
 
 // Print a process listing to console.  For debugging.

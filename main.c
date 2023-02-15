@@ -35,7 +35,6 @@ int main()
 {
 
     srand(time(NULL)); // randomize seed
-
     pinit(); // initialize process table
     curr_proc_id = userinit(); // create first user process
     char cmd[MAX_COMMAND_LENGTH + 1];
