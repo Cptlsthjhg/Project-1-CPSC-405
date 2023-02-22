@@ -58,7 +58,7 @@ struct proc {
   char ofiles[NFILE];          // Open files
   char cwd[CWD];               // Current directory
   char name[PNAME];            // Process name (debugging)
-  int tickets;                 // Tickets for processes
+  int nice;                    // nice value
   int vruntime;                // Vruntime as is used in LCFS
 };
 

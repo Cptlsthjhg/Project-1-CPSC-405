@@ -89,7 +89,8 @@ found:
     p->state = EMBRYO;
     p->pid = nextpid++;
 
-    p->tickets = 10;
+    p->nice = 0;
+    p->vruntime = 0;
 
     p->context = (struct context*)malloc(sizeof(struct context));
     memset(p->context, 0, sizeof *p->context);
@@ -112,7 +113,7 @@ userinit(void)
     p->state = RUNNING;
 
     //We're going to assign the firs user process some tickets too:
-    p->tickets = 10;
+    p->nice = 0;
 
     curr_proc = p;
     return p->pid;
@@ -155,8 +156,8 @@ int Tmod(int pid, int ticketValue){
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
         if(p->pid==pid){
 
-            int oldTickets = p->tickets;
-            p->tickets = ticketValue;
+            int oldTickets = p->nice;
+            p->nice = ticketValue;
             return oldTickets;
         }
     }
@@ -312,6 +313,29 @@ Kill(int pid)
     return -1;
 }
 
+
+
+int getTotalWeight(){
+
+    struct proc *p;
+    int max=0;
+
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    max+= getWeight(p);
+    }
+
+    return max;
+}
+
+
+int getWeight(struct proc* p){
+    int nice = p->nice;
+    double part = pow(1.25,(double)nice);
+    double weight = 1024 / part;
+    int w = round(weight);
+        return w;
+}
+
 // Per-CPU process scheduler.
 // Each CPU calls scheduler() after setting itself up.
 // Scheduler never returns.  It loops, doing:
@@ -331,9 +355,10 @@ scheduler(void)
     struct proc *p;
 
     //We need to get the maximum value of all weights.
-    int maxWeight = getMax();
+    int maxWeight = getTotalWeight();
     int minGran = 6;
     int schedule_latency = 48;
+    int w0 = 1000;
 
     acquire(&ptable.lock);
 
@@ -344,44 +369,23 @@ scheduler(void)
         if(p->vruntime < lowest->vruntime){lowest=p;}
     }
     //At the end of this loop, we should have found the (or a) lowest vruntime process.
+    p=lowest;
+    //probably redundant but just to be sure that the lowest is stored within p.
+
 
     //from here on out, I'm just copying what gusty had writted on slide 72 of the scheduling lecture.
     int timeslice = round ( (getWeight(lowest) / maxWeight * schedule_latency) );
     timeslice = timeslice < minGran ? minGran : timeslice;
 
 
-        // Switch to chosen process.
-    procswitch:
-        curr_proc = p;
-        p->state = RUNNING;
-
-        p->vruntime = p->vruntime + getWeight(p) / getWeight(p) * ghsoidhgopdfshngjoibsdfoligbljidsfbgioldjfsbgoidb//INCOMPLETE
+    // Switch to chosen process.
+    curr_proc = p;
+    p->state = RUNNING;
+    p->vruntime = p->vruntime + round( w0 / getWeight(p) * timeslice);
     
     release(&ptable.lock);
 
 }
-
-
-int getMax(){
-
-    struct proc *p;
-    int max=0;
-
-    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-    max+= getWeight(p);
-    }
-
-    return max;
-}
-
-
-int getWeight(struct proc* p){
-    int nice = p->tickets;
-    double weight = 1024 / (pow(1.25,nice));
-    int w = round(weight);
-        return w;
-}
-
 
 // Print a process listing to console.  For debugging.
 // Runs when user types ^P on console.
@@ -393,7 +397,7 @@ procdump(void)
 
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
         if(p->pid > 0)
-            printf("pid: %d, parent: %d state: %s tickets: %d\n", p->pid, p->parent == 0 ? 0 : p->parent->pid, procstatep[p->state], p->tickets);
+            printf("pid: %d, parent: %d state: %s nice: %d\n vruntime: %d\n", p->pid, p->parent == 0 ? 0 : p->parent->pid, procstatep[p->state], p->nice, p->vruntime);
 }
 
 
