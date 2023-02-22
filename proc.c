@@ -332,23 +332,30 @@ scheduler(void)
 
     //We need to get the maximum value of all weights.
     int maxWeight = getMax();
-    rint=rand() % m;
-    //now we have our rand and can grab the proper proc paired to the rand result.
+    int minGran = 6;
+    int schedule_latency = 48;
+
     acquire(&ptable.lock);
 
-    //DEBUG LINE
-    printf("The random number selected is: %d \n",rint);
+    //The process with the lowest virtual run time gets executed
+        struct proc *lowest = p;
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-        runningTotal+= p->tickets;
-        if(rint<=runningTotal){
-        goto procswitch;
-        }
+    //gotta find process with lowest virtual run time.
+        if(p->vruntime < lowest->vruntime){lowest=p;}
     }
+    //At the end of this loop, we should have found the (or a) lowest vruntime process.
+
+    //from here on out, I'm just copying what gusty had writted on slide 72 of the scheduling lecture.
+    int timeslice = round ( (getWeight(lowest) / maxWeight * schedule_latency) );
+    timeslice = timeslice < minGran ? minGran : timeslice;
+
 
         // Switch to chosen process.
     procswitch:
         curr_proc = p;
         p->state = RUNNING;
+
+        p->vruntime = p->vruntime + getWeight(p) / getWeight(p) * ghsoidhgopdfshngjoibsdfoligbljidsfbgioldjfsbgoidb//INCOMPLETE
     
     release(&ptable.lock);
 

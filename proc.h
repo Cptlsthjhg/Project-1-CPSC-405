@@ -59,5 +59,6 @@ struct proc {
   char cwd[CWD];               // Current directory
   char name[PNAME];            // Process name (debugging)
   int tickets;                 // Tickets for processes
+  int vruntime;                // Vruntime as is used in LCFS
 };
 
