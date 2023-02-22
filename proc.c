@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 #include "types.h"
 #include "defs.h"
 #include "proc.h"
@@ -328,11 +329,9 @@ scheduler(void)
     curr_proc->state = RUNNABLE;
 
     struct proc *p;
-    int rint=0;
-    int runningTotal=0;
 
-    //We need to grab the total number of tickets in order to set rand bounds.
-    int m = getMax();
+    //We need to get the maximum value of all weights.
+    int maxWeight = getMax();
     rint=rand() % m;
     //now we have our rand and can grab the proper proc paired to the rand result.
     acquire(&ptable.lock);
@@ -362,11 +361,20 @@ int getMax(){
     int max=0;
 
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-    max+= p->tickets;
+    max+= getWeight(p);
     }
 
     return max;
 }
+
+
+int getWeight(struct proc* p){
+    int nice = p->tickets;
+    double weight = 1024 / (pow(1.25,nice));
+    int w = round(weight);
+        return w;
+}
+
 
 // Print a process listing to console.  For debugging.
 // Runs when user types ^P on console.
