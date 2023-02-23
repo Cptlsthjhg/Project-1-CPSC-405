@@ -324,9 +324,10 @@ scheduler(void)
     // A continous loop in real code
     //  if(first_sched) first_sched = 0;
     //  else sti();
-
-    curr_proc->state = RUNNABLE;
-
+    if(curr_proc->state != SLEEPING) {
+        curr_proc->state = RUNNABLE;
+    }
+    
     struct proc *p;
     int rint=0;
     int runningTotal=0;
@@ -338,9 +339,11 @@ scheduler(void)
     acquire(&ptable.lock);
 
     //DEBUG LINE
-    printf("The random number selected is: %d \n",rint);
+    //printf("The random number selected is: %d \n",rint);
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-        runningTotal+= p->tickets;
+        if(p->state == RUNNABLE) {
+            runningTotal+= p->tickets;
+        }
         if(rint<=runningTotal){
         goto procswitch;
         }
@@ -362,7 +365,10 @@ int getMax(){
     int max=0;
 
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-    max+= p->tickets;
+        if(p->state != RUNNABLE) {
+            continue;
+        }
+        max+= p->tickets;
     }
 
     return max;
