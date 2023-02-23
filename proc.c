@@ -366,7 +366,7 @@ scheduler(void)
         struct proc *lowest = p;
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     //gotta find process with lowest virtual run time.
-        if(p->vruntime < lowest->vruntime && p->state==READY){lowest=p;}
+        if(p->vruntime < lowest->vruntime){lowest=p;}
     }
     //At the end of this loop, we should have found the (or a) lowest vruntime process.
     p=lowest;
