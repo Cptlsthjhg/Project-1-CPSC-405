@@ -91,6 +91,7 @@ found:
 
     p->nice = 0;
     p->vruntime = 0;
+    p->runtime = 0;
 
     p->context = (struct context*)malloc(sizeof(struct context));
     memset(p->context, 0, sizeof *p->context);
@@ -363,10 +364,13 @@ scheduler(void)
     acquire(&ptable.lock);
 
     //The process with the lowest virtual run time gets executed
-        struct proc *lowest = p;
+        struct proc *lowest;
+        lowest=ptable.proc;
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     //gotta find process with lowest virtual run time.
-        if(p->vruntime < lowest->vruntime){lowest=p;}
+        if(p->vruntime < lowest->vruntime && p->state==3){
+            lowest=p;
+        }
     }
     //At the end of this loop, we should have found the (or a) lowest vruntime process.
     p=lowest;
@@ -381,8 +385,11 @@ scheduler(void)
     // Switch to chosen process.
     curr_proc = p;
     p->state = RUNNING;
-    p->vruntime = p->vruntime + round( w0 / getWeight(p) * timeslice);
-    
+    p->runtime = p->runtime + round( w0 / getWeight(p) * timeslice);
+
+    int localruntime = p->vruntime;
+    localruntime++;
+    p->vruntime = localruntime;
     release(&ptable.lock);
 
 }
@@ -397,7 +404,7 @@ procdump(void)
 
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
         if(p->pid > 0)
-            printf("pid: %d, parent: %d state: %s nice: %d\n vruntime: %d\n", p->pid, p->parent == 0 ? 0 : p->parent->pid, procstatep[p->state], p->nice, p->vruntime);
+            printf("pid: %d, parent: %d state: %s nice: %d runtime: %d vruntime: %d\n", p->pid, p->parent == 0 ? 0 : p->parent->pid, procstatep[p->state], p->nice, p->runtime, p->vruntime);
 }
 
 

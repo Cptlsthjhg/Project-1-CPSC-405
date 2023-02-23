@@ -60,5 +60,6 @@ struct proc {
   char name[PNAME];            // Process name (debugging)
   int nice;                    // nice value
   int vruntime;                // Vruntime as is used in LCFS
+  int runtime;                 //actual runtime.
 };
 
