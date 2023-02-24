@@ -11,6 +11,9 @@
 #include "defs.h"
 #include "proc.h"
 
+double getWeight(struct proc* p);
+int getTotalWeight();
+
 
 static void wakeup1(int chan);
 
@@ -320,21 +323,22 @@ int getTotalWeight(){
 
     struct proc *p;
     int max=0;
-
+    double hold=0;
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-    max+= getWeight(p);
+        hold=getWeight(p);
+        if(p->state==RUNNABLE){
+        max+= round(hold);
+        }
     }
-
     return max;
 }
 
 
-int getWeight(struct proc* p){
+double getWeight(struct proc* p){
     int nice = p->nice;
     double part = pow(1.25,(double)nice);
     double weight = 1024 / part;
-    int w = round(weight);
-        return w;
+        return weight;
 }
 
 // Per-CPU process scheduler.
@@ -350,8 +354,10 @@ scheduler(void)
     // A continous loop in real code
     //  if(first_sched) first_sched = 0;
     //  else sti();
-
+    if(curr_proc->state != SLEEPING){
     curr_proc->state = RUNNABLE;
+    }
+
 
     struct proc *p;
 
@@ -368,7 +374,7 @@ scheduler(void)
         lowest=ptable.proc;
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     //gotta find process with lowest virtual run time.
-        if(p->vruntime < lowest->vruntime && p->state==3){
+        if(p->vruntime < lowest->vruntime && p->state== RUNNABLE){
             lowest=p;
         }
     }
@@ -378,14 +384,19 @@ scheduler(void)
 
 
     //from here on out, I'm just copying what gusty had writted on slide 72 of the scheduling lecture.
-    int timeslice = round ( (getWeight(lowest) / maxWeight * schedule_latency) );
-    timeslice = timeslice < minGran ? minGran : timeslice;
 
 
     // Switch to chosen process.
     curr_proc = p;
     p->state = RUNNING;
-    p->runtime = p->runtime + round( w0 / getWeight(p) * timeslice);
+    double timeToRun = round ( (getWeight(p)/(double)maxWeight) * schedule_latency);
+
+    printf("timeslice:%lf\n",timeToRun);
+    if(timeToRun < minGran){
+        timeToRun = minGran;
+    } 
+    p->runtime = p->runtime + timeToRun;
+    
 
     int localruntime = p->vruntime;
     localruntime++;
