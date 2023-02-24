@@ -324,7 +324,7 @@ scheduler(void)
     // A continous loop in real code
     //  if(first_sched) first_sched = 0;
     //  else sti();
-    if(curr_proc->state != SLEEPING) {
+    if(curr_proc->state != SLEEPING || curr_proc->state != ZOMBIE || curr_proc->state != EMBRYO) {
         curr_proc->state = RUNNABLE;
     }
     
